@@ -19,7 +19,7 @@ GRID_WIDTH = 20
 GRID_HEIGHT = 15
 HEADER_HEIGHT = 16
 BOARD_HEIGHT = GRID_HEIGHT * CELL_SIZE
-CONTROL_HEIGHT = 56
+CONTROL_HEIGHT = 78
 BOARD_TOP = HEADER_HEIGHT
 CONTROL_TOP = BOARD_TOP + BOARD_HEIGHT
 SCREEN_WIDTH = GRID_WIDTH * CELL_SIZE
@@ -50,11 +50,11 @@ class Rect:
 
 TITLE_PANEL = Rect(18, 30, 124, 60)
 GAME_OVER_PANEL = Rect(26, 44, 108, 34)
-UP_BUTTON = Rect(26, CONTROL_TOP + 4, 28, 16)
-LEFT_BUTTON = Rect(4, CONTROL_TOP + 24, 28, 16)
-DOWN_BUTTON = Rect(26, CONTROL_TOP + 24, 28, 16)
-RIGHT_BUTTON = Rect(48, CONTROL_TOP + 24, 28, 16)
-START_BUTTON = Rect(96, CONTROL_TOP + 10, 58, 26)
+UP_BUTTON = Rect(28, CONTROL_TOP + 6, 40, 22)
+LEFT_BUTTON = Rect(4, CONTROL_TOP + 30, 40, 24)
+DOWN_BUTTON = Rect(28, CONTROL_TOP + 30, 40, 24)
+RIGHT_BUTTON = Rect(52, CONTROL_TOP + 30, 40, 24)
+START_BUTTON = Rect(102, CONTROL_TOP + 14, 54, 34)
 
 
 class SnakeGame:
@@ -245,13 +245,13 @@ class SnakeGame:
     def draw_controls(self) -> None:
         pyxel.rect(0, CONTROL_TOP, SCREEN_WIDTH, CONTROL_HEIGHT, 1)
         pyxel.line(0, CONTROL_TOP, SCREEN_WIDTH - 1, CONTROL_TOP, 7)
-        pyxel.text(8, CONTROL_TOP + 46, "TAP PAD", 7)
-        pyxel.text(96, CONTROL_TOP + 46, "SPACE", 7)
+        pyxel.text(11, CONTROL_TOP + 61, "TAP PAD", 7)
+        pyxel.text(109, CONTROL_TOP + 57, "START", 7)
 
-        self.draw_button(UP_BUTTON, "UP")
-        self.draw_button(LEFT_BUTTON, "LT")
-        self.draw_button(DOWN_BUTTON, "DN")
-        self.draw_button(RIGHT_BUTTON, "RT")
+        self.draw_direction_button(UP_BUTTON, "up")
+        self.draw_direction_button(LEFT_BUTTON, "left")
+        self.draw_direction_button(DOWN_BUTTON, "down")
+        self.draw_direction_button(RIGHT_BUTTON, "right")
 
         start_label = "GO" if self.state == "playing" else "START"
         self.draw_button(START_BUTTON, start_label, accent=8)
@@ -314,6 +314,44 @@ class SnakeGame:
         text_x = rect.x + rect.w // 2 - len(label) * 2
         text_y = rect.y + rect.h // 2 - 2
         pyxel.text(text_x, text_y, label, text)
+
+    def draw_direction_button(self, rect: Rect, direction: str) -> None:
+        is_active = self.button_active(rect)
+        fill = 12 if is_active else 5
+        border = 7 if is_active else 12
+        icon = 0 if is_active else 7
+        pyxel.rect(rect.x, rect.y, rect.w, rect.h, fill)
+        pyxel.rectb(rect.x, rect.y, rect.w, rect.h, border)
+        self.draw_arrow_icon(rect, direction, icon)
+
+    def draw_arrow_icon(self, rect: Rect, direction: str, color: int) -> None:
+        cx = rect.x + rect.w // 2
+        cy = rect.y + rect.h // 2
+
+        if direction == "up":
+            pyxel.line(cx, cy - 6, cx, cy + 5, color)
+            pyxel.line(cx, cy - 6, cx - 4, cy - 2, color)
+            pyxel.line(cx, cy - 6, cx + 4, cy - 2, color)
+            pyxel.line(cx - 3, cy - 1, cx, cy - 4, color)
+            pyxel.line(cx + 3, cy - 1, cx, cy - 4, color)
+        elif direction == "down":
+            pyxel.line(cx, cy - 5, cx, cy + 6, color)
+            pyxel.line(cx, cy + 6, cx - 4, cy + 2, color)
+            pyxel.line(cx, cy + 6, cx + 4, cy + 2, color)
+            pyxel.line(cx - 3, cy + 1, cx, cy + 4, color)
+            pyxel.line(cx + 3, cy + 1, cx, cy + 4, color)
+        elif direction == "left":
+            pyxel.line(cx - 6, cy, cx + 6, cy, color)
+            pyxel.line(cx - 6, cy, cx - 2, cy - 4, color)
+            pyxel.line(cx - 6, cy, cx - 2, cy + 4, color)
+            pyxel.line(cx - 1, cy - 3, cx - 4, cy, color)
+            pyxel.line(cx - 1, cy + 3, cx - 4, cy, color)
+        else:
+            pyxel.line(cx - 6, cy, cx + 6, cy, color)
+            pyxel.line(cx + 6, cy, cx + 2, cy - 4, color)
+            pyxel.line(cx + 6, cy, cx + 2, cy + 4, color)
+            pyxel.line(cx + 1, cy - 3, cx + 4, cy, color)
+            pyxel.line(cx + 1, cy + 3, cx + 4, cy, color)
 
     def draw_cell(self, point: Point, color: int) -> None:
         x, y = self.to_screen(point)
