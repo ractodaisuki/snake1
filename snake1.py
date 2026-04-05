@@ -50,10 +50,11 @@ class Rect:
 
 TITLE_PANEL = Rect(18, 30, 124, 60)
 GAME_OVER_PANEL = Rect(26, 44, 108, 34)
-UP_BUTTON = Rect(28, CONTROL_TOP + 6, 40, 22)
-LEFT_BUTTON = Rect(4, CONTROL_TOP + 30, 40, 24)
-DOWN_BUTTON = Rect(28, CONTROL_TOP + 30, 40, 24)
-RIGHT_BUTTON = Rect(52, CONTROL_TOP + 30, 40, 24)
+UP_BUTTON = Rect(28, CONTROL_TOP + 6, 24, 24)
+LEFT_BUTTON = Rect(4, CONTROL_TOP + 30, 24, 24)
+DPAD_CENTER = Rect(28, CONTROL_TOP + 30, 24, 24)
+RIGHT_BUTTON = Rect(52, CONTROL_TOP + 30, 24, 24)
+DOWN_BUTTON = Rect(28, CONTROL_TOP + 54, 24, 24)
 START_BUTTON = Rect(102, CONTROL_TOP + 14, 54, 34)
 
 
@@ -245,13 +246,10 @@ class SnakeGame:
     def draw_controls(self) -> None:
         pyxel.rect(0, CONTROL_TOP, SCREEN_WIDTH, CONTROL_HEIGHT, 1)
         pyxel.line(0, CONTROL_TOP, SCREEN_WIDTH - 1, CONTROL_TOP, 7)
-        pyxel.text(11, CONTROL_TOP + 61, "TAP PAD", 7)
+        pyxel.text(11, CONTROL_TOP + 61, "D-PAD", 7)
         pyxel.text(109, CONTROL_TOP + 57, "START", 7)
 
-        self.draw_direction_button(UP_BUTTON, "up")
-        self.draw_direction_button(LEFT_BUTTON, "left")
-        self.draw_direction_button(DOWN_BUTTON, "down")
-        self.draw_direction_button(RIGHT_BUTTON, "right")
+        self.draw_dpad()
 
         start_label = "GO" if self.state == "playing" else "START"
         self.draw_button(START_BUTTON, start_label, accent=8)
@@ -323,6 +321,18 @@ class SnakeGame:
         pyxel.rect(rect.x, rect.y, rect.w, rect.h, fill)
         pyxel.rectb(rect.x, rect.y, rect.w, rect.h, border)
         self.draw_arrow_icon(rect, direction, icon)
+
+    def draw_dpad(self) -> None:
+        self.draw_direction_button(UP_BUTTON, "up")
+        self.draw_direction_button(LEFT_BUTTON, "left")
+        self.draw_direction_button(RIGHT_BUTTON, "right")
+        self.draw_direction_button(DOWN_BUTTON, "down")
+        pyxel.rect(DPAD_CENTER.x, DPAD_CENTER.y, DPAD_CENTER.w, DPAD_CENTER.h, 13)
+        pyxel.rectb(DPAD_CENTER.x, DPAD_CENTER.y, DPAD_CENTER.w, DPAD_CENTER.h, 6)
+        pyxel.pset(DPAD_CENTER.x + 11, DPAD_CENTER.y + 11, 7)
+        pyxel.pset(DPAD_CENTER.x + 12, DPAD_CENTER.y + 11, 7)
+        pyxel.pset(DPAD_CENTER.x + 11, DPAD_CENTER.y + 12, 7)
+        pyxel.pset(DPAD_CENTER.x + 12, DPAD_CENTER.y + 12, 7)
 
     def draw_arrow_icon(self, rect: Rect, direction: str, color: int) -> None:
         cx = rect.x + rect.w // 2
