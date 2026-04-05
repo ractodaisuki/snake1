@@ -18,8 +18,12 @@ CELL_SIZE = 8
 GRID_WIDTH = 20
 GRID_HEIGHT = 15
 HEADER_HEIGHT = 16
+BOARD_HEIGHT = GRID_HEIGHT * CELL_SIZE
+CONTROL_HEIGHT = 56
+BOARD_TOP = HEADER_HEIGHT
+CONTROL_TOP = BOARD_TOP + BOARD_HEIGHT
 SCREEN_WIDTH = GRID_WIDTH * CELL_SIZE
-SCREEN_HEIGHT = HEADER_HEIGHT + GRID_HEIGHT * CELL_SIZE
+SCREEN_HEIGHT = CONTROL_TOP + CONTROL_HEIGHT
 
 DIR_UP = (0, -1)
 DIR_DOWN = (0, 1)
@@ -33,6 +37,26 @@ class Point:
     y: int
 
 
+@dataclass(frozen=True)
+class Rect:
+    x: int
+    y: int
+    w: int
+    h: int
+
+    def contains(self, px: int, py: int) -> bool:
+        return self.x <= px < self.x + self.w and self.y <= py < self.y + self.h
+
+
+TITLE_PANEL = Rect(18, 30, 124, 60)
+GAME_OVER_PANEL = Rect(26, 44, 108, 34)
+UP_BUTTON = Rect(26, CONTROL_TOP + 4, 28, 16)
+LEFT_BUTTON = Rect(4, CONTROL_TOP + 24, 28, 16)
+DOWN_BUTTON = Rect(26, CONTROL_TOP + 24, 28, 16)
+RIGHT_BUTTON = Rect(48, CONTROL_TOP + 24, 28, 16)
+START_BUTTON = Rect(96, CONTROL_TOP + 10, 58, 26)
+
+
 class SnakeGame:
     def __init__(self) -> None:
         pyxel.init(
@@ -42,6 +66,7 @@ class SnakeGame:
             fps=30,
             quit_key=pyxel.KEY_NONE,
         )
+        pyxel.mouse(True)
         self.best_score = 0
         self.state = "title"
         self.blink = True
@@ -63,7 +88,6 @@ class SnakeGame:
         self.pending_direction = DIR_RIGHT
         self.food = self.spawn_food()
         self.score = 0
-        self.steps = 0
         self.move_timer = 0
         self.flash_timer = 0
 
@@ -128,7 +152,6 @@ class SnakeGame:
         self.snake.appendleft(new_head)
         if grow:
             self.score += 1
-            self.steps += 1
             self.food = self.spawn_food()
         else:
             self.snake.pop()
@@ -146,6 +169,15 @@ class SnakeGame:
             return DIR_LEFT
         if pyxel.btnp(pyxel.KEY_RIGHT) or pyxel.btnp(pyxel.KEY_D):
             return DIR_RIGHT
+
+        if self.button_pressed(UP_BUTTON):
+            return DIR_UP
+        if self.button_pressed(DOWN_BUTTON):
+            return DIR_DOWN
+        if self.button_pressed(LEFT_BUTTON):
+            return DIR_LEFT
+        if self.button_pressed(RIGHT_BUTTON):
+            return DIR_RIGHT
         return None
 
     def start_pressed(self) -> bool:
@@ -153,6 +185,25 @@ class SnakeGame:
             pyxel.btnp(pyxel.KEY_SPACE)
             or pyxel.btnp(pyxel.KEY_RETURN)
             or pyxel.btnp(pyxel.KEY_KP_ENTER)
+            or self.button_pressed(START_BUTTON)
+            or self.panel_pressed()
+        )
+
+    def panel_pressed(self) -> bool:
+        if self.state == "title":
+            return self.button_pressed(TITLE_PANEL)
+        if self.state == "game_over":
+            return self.button_pressed(GAME_OVER_PANEL)
+        return False
+
+    def button_pressed(self, rect: Rect) -> bool:
+        return pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT) and rect.contains(
+            pyxel.mouse_x, pyxel.mouse_y
+        )
+
+    def button_active(self, rect: Rect) -> bool:
+        return pyxel.btn(pyxel.MOUSE_BUTTON_LEFT) and rect.contains(
+            pyxel.mouse_x, pyxel.mouse_y
         )
 
     def is_reverse(self, direction: tuple[int, int]) -> bool:
@@ -169,6 +220,7 @@ class SnakeGame:
         pyxel.cls(0)
         self.draw_header()
         self.draw_board()
+        self.draw_controls()
 
         if self.state == "title":
             self.draw_title()
@@ -188,8 +240,21 @@ class SnakeGame:
 
         self.draw_food()
         self.draw_snake()
+        pyxel.rectb(0, BOARD_TOP, SCREEN_WIDTH, BOARD_HEIGHT, 7)
 
-        pyxel.rectb(0, HEADER_HEIGHT, SCREEN_WIDTH, GRID_HEIGHT * CELL_SIZE, 7)
+    def draw_controls(self) -> None:
+        pyxel.rect(0, CONTROL_TOP, SCREEN_WIDTH, CONTROL_HEIGHT, 1)
+        pyxel.line(0, CONTROL_TOP, SCREEN_WIDTH - 1, CONTROL_TOP, 7)
+        pyxel.text(8, CONTROL_TOP + 46, "TAP PAD", 7)
+        pyxel.text(96, CONTROL_TOP + 46, "SPACE", 7)
+
+        self.draw_button(UP_BUTTON, "UP")
+        self.draw_button(LEFT_BUTTON, "LT")
+        self.draw_button(DOWN_BUTTON, "DN")
+        self.draw_button(RIGHT_BUTTON, "RT")
+
+        start_label = "GO" if self.state == "playing" else "START"
+        self.draw_button(START_BUTTON, start_label, accent=8)
 
     def draw_food(self) -> None:
         x, y = self.to_screen(self.food)
@@ -218,29 +283,44 @@ class SnakeGame:
                     pyxel.pset(x + 5, y + 5, 7)
 
     def draw_title(self) -> None:
-        pyxel.rect(18, 30, 124, 60, 0)
-        pyxel.rectb(18, 30, 124, 60, 7)
+        pyxel.rect(TITLE_PANEL.x, TITLE_PANEL.y, TITLE_PANEL.w, TITLE_PANEL.h, 0)
+        pyxel.rectb(TITLE_PANEL.x, TITLE_PANEL.y, TITLE_PANEL.w, TITLE_PANEL.h, 7)
         pyxel.text(60, 40, "SNAKE", 8)
-        pyxel.text(34, 56, "ARROWS / WASD TO MOVE", 7)
-        pyxel.text(41, 66, "EAT FOOD, AVOID WALLS", 6)
+        pyxel.text(34, 56, "ARROWS / WASD / TAP", 7)
+        pyxel.text(37, 66, "EAT FOOD, AVOID WALLS", 6)
         if self.blink:
-            pyxel.text(43, 80, "PRESS SPACE TO START", 10)
+            pyxel.text(31, 80, "TAP START OR PRESS SPACE", 10)
 
     def draw_game_over(self) -> None:
         if self.flash_timer % 4 < 2:
-            pyxel.rect(26, 44, 108, 34, 0)
-            pyxel.rectb(26, 44, 108, 34, 8)
+            pyxel.rect(
+                GAME_OVER_PANEL.x, GAME_OVER_PANEL.y, GAME_OVER_PANEL.w, GAME_OVER_PANEL.h, 0
+            )
+            pyxel.rectb(
+                GAME_OVER_PANEL.x, GAME_OVER_PANEL.y, GAME_OVER_PANEL.w, GAME_OVER_PANEL.h, 8
+            )
             pyxel.text(53, 52, "GAME OVER", 8)
             pyxel.text(50, 62, f"SCORE {self.score:02}", 7)
             if self.blink:
-                pyxel.text(35, 70, "PRESS SPACE TO RETRY", 10)
+                pyxel.text(33, 70, "TAP START TO RETRY", 10)
+
+    def draw_button(self, rect: Rect, label: str, accent: int = 12) -> None:
+        is_active = self.button_active(rect)
+        fill = accent if is_active else 5
+        border = 7 if is_active else accent
+        text = 0 if is_active else 7
+        pyxel.rect(rect.x, rect.y, rect.w, rect.h, fill)
+        pyxel.rectb(rect.x, rect.y, rect.w, rect.h, border)
+        text_x = rect.x + rect.w // 2 - len(label) * 2
+        text_y = rect.y + rect.h // 2 - 2
+        pyxel.text(text_x, text_y, label, text)
 
     def draw_cell(self, point: Point, color: int) -> None:
         x, y = self.to_screen(point)
         pyxel.rect(x, y, CELL_SIZE, CELL_SIZE, color)
 
     def to_screen(self, point: Point) -> tuple[int, int]:
-        return point.x * CELL_SIZE, HEADER_HEIGHT + point.y * CELL_SIZE
+        return point.x * CELL_SIZE, BOARD_TOP + point.y * CELL_SIZE
 
 
 SnakeGame()

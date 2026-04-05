@@ -1,2 +1,67 @@
-<script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
-<pyxel-run name="snake1.py"></pyxel-run>
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
+    >
+    <title>Snake</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at top, #294b39 0%, #13231b 45%, #09110d 100%);
+        color: #eef6e8;
+        font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+        touch-action: manipulation;
+        overscroll-behavior: none;
+      }
+
+      main {
+        width: min(100vw, 420px);
+        padding: 16px 12px 20px;
+        display: grid;
+        justify-items: center;
+        gap: 10px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 22px;
+        letter-spacing: 0.08em;
+      }
+
+      p {
+        margin: 0;
+        text-align: center;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #c9d8c0;
+      }
+
+      pyxel-run {
+        display: block;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
+  </head>
+  <body>
+    <main>
+      <h1>Snake</h1>
+      <pyxel-run name="snake1.py"></pyxel-run>
+      <p>スマホは下のボタンをタップ。PC は矢印キー / WASD と Space で操作できます。</p>
+    </main>
+  </body>
+</html>
